@@ -27,6 +27,10 @@ server.get('/rout1',handelRout1)
 server.get('/rout2',handelRout2)
 server.post('/addMovie',handelAddMovie)
 server.get('/getMovies',handelGetMovie)
+server.put('/UPDATE/:id', upMovieHandler);
+server.delete('/DELETE/:id', delMovieHandler);
+server.get('/getMovie/:id', getMovie);
+
 server.use('', handleError) // 404 Error
 server.use (handleError500)
 
@@ -129,6 +133,47 @@ function handelSearching(request, response) {
     
 
 
+
+    function upMovieHandler(req, res) {
+        const id = req.params.id;
+        const movie = req.body;
+        const sql = `UPDATE ACTIONMOVIE SET title =$1, release_date = $2, poster_path = $3 ,overview = $4 WHERE id=$5 RETURNING *;`;
+        let values = [movie.title, movie.release_date, movie.poster_path, movie.overview, id];
+        client.query(sql, values).then(data => {
+            res.status(200).json(data.rows);
+            // res.status(204)
+        }).catch(error => {
+            HandleError500(error, req, res)
+        });
+    }
+    
+
+
+
+    function  delMovieHandler(req, res) {
+        const id = req.params.id;
+        const sql = `DELETE FROM ACTIONMOVIE WHERE id=${id};`
+        client.query(sql).then(() => {
+            res.status(200).send("the movie got deleted");
+        }).catch(error => {
+            HandleError500(error, req, res)
+        });
+    }
+    
+
+
+
+
+
+    function getMovie(req,res){
+        const id = req.params.id;
+        let sql = `SELECT * FROM ACTIONMOVIE WHERE id=${id};`;
+        client.query(sql).then(data=>{
+           res.status(200).json(data.rows);
+        }).catch(error=>{
+            handleError500(error,req,res)
+        });
+    }
 
 
 
