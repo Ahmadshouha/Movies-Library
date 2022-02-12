@@ -7,6 +7,12 @@ const data = require('./data.json');
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
+const pg = require('pg');
+const client = new pg.Client(process.env.DATABASE_URL);
+
+
+
+
 const server = express();
 const port= process.env.PORT
 
@@ -19,6 +25,8 @@ server.get('/trending',handelTrending)
 server.get('/search',handelSearching)
 server.get('/rout1',handelRout1)
 server.get('/rout2',handelRout2)
+server.post('/addMovie',handelAddMovie)
+server.get('/getMovies',handelGetMovie)
 server.use('', handleError) // 404 Error
 server.use (handleError500)
 
@@ -70,7 +78,7 @@ function handelSearching(request, response) {
      console.log("Error");
     })
  }
- function handelSearching(request, response) {
+ function handelRout1(request, response) {
  let url3 = `https://api.themoviedb.org/3/genre/movie/list?api_key=${process.env.APIKEY}`;
  axios.get(url3)
  .then((access3) => {
@@ -81,6 +89,45 @@ function handelSearching(request, response) {
      console.log("Error");
  })}
  
+
+
+ function handelRout2(request, response) {
+    let url4 = `https://api.themoviedb.org/3/person/11?api_key=${process.env.APIKEY}`;
+    axios.get(url4)
+    .then((access4) => {
+        let result = access4.data;
+        res.status(200).json(result);
+        console.log(result);
+    }).catch((err) => {
+        console.log("Error");
+    })}
+
+
+    function handelAddMovie (request, response){
+    const movie = request.body;
+    let sql = `INSERT INTO ACTIONMOVIE(title,release_date,poster_path,overview) VALUES ($1,$2,$3,$4) RETURNING *;`
+    let values=[movie.title,movie.release_date,movie.poster_path,movie.overview];
+    client.query(sql,values).then(data => {
+        response.status(200).json(data);
+    }).catch(error =>{
+        handleError500(error, request, response)
+    });
+    }
+
+
+
+
+
+    function handelGetMovie(req,res){
+        let sql = `SELECT * FROM ACTIONMOVIE;`;
+        client.query(sql).then(data=>{
+           res.status(200).json(data.rows);
+        }).catch(error=>{
+            handleError500(error,req,res)
+        });
+    }
+    
+
 
 
 
